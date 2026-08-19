@@ -1,0 +1,1 @@
+import {prisma} from "@/lib/prisma";import {NextResponse} from "next/server";export async function GET(req:Request){const n=Math.min(Number(new URL(req.url).searchParams.get("limit")||10),50);const users=await prisma.user.findMany({orderBy:[{score:"desc"},{createdAt:"asc"}],take:n,select:{username:true,score:true}});return NextResponse.json({leaderboard:users})}

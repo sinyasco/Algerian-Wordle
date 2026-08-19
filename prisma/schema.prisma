@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum GameLanguage {
+  arabic
+  arabizi
+}
+
+enum UiLanguage {
+  en
+  fr
+  ar
+}
+
+enum GameStatus {
+  in_progress
+  won
+  lost
+}
+
+model User {
+  id String @id @default(cuid())
+  username String @unique @db.VarChar(32)
+  passwordHash String
+  score Int @default(0)
+  preferredUiLanguage UiLanguage @default(en)
+  preferredGameLanguage GameLanguage @default(arabizi)
+  createdAt DateTime @default(now())
+  games GameSession[]
+  @@index([score(sort: Desc), createdAt(sort: Asc)])
+}
+
+model Word {
+  id String @id @default(cuid())
+  text String
+  language GameLanguage
+  length Int
+  isActive Boolean @default(true)
+  games GameSession[]
+  @@unique([text, language])
+  @@index([language, isActive, length])
+}
+
+model GameSession {
+  id String @id @default(cuid())
+  userId String
+  wordId String
+  status GameStatus @default(in_progress)
+  attempts Json @default("[]")
+  startedAt DateTime @default(now())
+  finishedAt DateTime?
+  lastGuessAt DateTime?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  word Word @relation(fields: [wordId], references: [id], onDelete: Restrict)
+  @@index([userId, status, startedAt(sort: Desc)])
+}
